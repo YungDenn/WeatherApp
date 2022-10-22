@@ -102,10 +102,10 @@ class MainFragment : Fragment() {
 
     private fun updateCurrentCard() = with(binding) {
         model.liveDataCurrent.observe(viewLifecycleOwner) {
-            val maxMinTemp = "${it.maxTemp}C /${it.minTemp}C"
+            val maxMinTemp = "${it.maxTemp}°/${it.minTemp}°"
             tvData.text = it.time
             tvCityName.text = it.city
-            tvCurrentTemp.text = it.currentTemp
+            tvCurrentTemp.text = "${it.currentTemp}°"
             tvCondition.text = it.condition
             tvMaxMinTemp.text = maxMinTemp
             Picasso.get().load("https:${it.imageUrl}").into(imWeather)
@@ -139,6 +139,7 @@ class MainFragment : Fragment() {
             )
             list.add(item)
         }
+        model.liveDataList.value = list
         return list
     }
 

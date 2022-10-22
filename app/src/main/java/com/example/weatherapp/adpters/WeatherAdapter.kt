@@ -16,7 +16,7 @@ class WeatherAdapter : ListAdapter<WeatherModel, WeatherAdapter.Holder>(Comparat
         fun bind(item: WeatherModel) = with(binding) {
             tvDate.text = item.time
             tvCondition.text = item.condition
-            tvTemp.text = item.currentTemp
+            tvTemp.text = item.currentTemp.ifEmpty { "${item.minTemp}°/${item.maxTemp}°" }
             Picasso.get().load("https:${item.imageUrl}").into(iwIcon)
 
         }
@@ -39,5 +39,9 @@ class WeatherAdapter : ListAdapter<WeatherModel, WeatherAdapter.Holder>(Comparat
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         holder.bind(getItem(position))
+    }
+
+    interface OnClickListener{
+        fun onClickDay(item: WeatherModel)
     }
 }
