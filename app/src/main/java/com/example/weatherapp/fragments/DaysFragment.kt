@@ -37,7 +37,7 @@ class DaysFragment : Fragment(), WeatherAdapter.OnClickListener {
         }
     }
     private fun init() = with(binding){
-        adapter = WeatherAdapter()
+        adapter = WeatherAdapter(this@DaysFragment)
         rcView.layoutManager=LinearLayoutManager(activity)
         rcView.adapter = adapter
     }
@@ -49,6 +49,6 @@ class DaysFragment : Fragment(), WeatherAdapter.OnClickListener {
     }
 
     override fun onClickDay(item: WeatherModel) {
-
+        model.liveDataCurrent.value = item
     }
 }

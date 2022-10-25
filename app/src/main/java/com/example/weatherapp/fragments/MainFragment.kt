@@ -24,6 +24,7 @@ import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.squareup.picasso.Picasso
 import org.json.JSONObject
+import kotlin.math.max
 
 
 class MainFragment : Fragment() {
@@ -105,9 +106,9 @@ class MainFragment : Fragment() {
             val maxMinTemp = "${it.maxTemp}°/${it.minTemp}°"
             tvData.text = it.time
             tvCityName.text = it.city
-            tvCurrentTemp.text = "${it.currentTemp}°"
+            tvCurrentTemp.text = it.currentTemp.ifEmpty { maxMinTemp }
             tvCondition.text = it.condition
-            tvMaxMinTemp.text = maxMinTemp
+            tvMaxMinTemp.text = if (it.currentTemp.isEmpty()) "" else maxMinTemp
             Picasso.get().load("https:${it.imageUrl}").into(imWeather)
         }
     }
