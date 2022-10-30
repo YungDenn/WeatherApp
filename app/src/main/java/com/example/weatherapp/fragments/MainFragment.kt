@@ -103,6 +103,14 @@ class MainFragment : Fragment() {
             checkLocation()
             tabLayout.selectTab(tabLayout.getTabAt(0))
         }
+
+        tbSearch.setOnClickListener{
+            DialogManager.searchByNameDialog(requireContext(), object : DialogManager.Listener{
+                override fun onClickSettings(name: String?) {
+                    name?.let { it1 -> requestWeatherData(it1) }
+                }
+            })
+        }
     }
 
     private fun checkLocation() {
@@ -110,7 +118,7 @@ class MainFragment : Fragment() {
             getLocation()
         } else {
             DialogManager.locationSettingsDialog(requireContext(), object: DialogManager.Listener{
-                override fun onClickSettings() {
+                override fun onClickSettings(name: String?) {
                     startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                 }
             })
@@ -158,6 +166,7 @@ class MainFragment : Fragment() {
                 parseWeatherData(result)
             },
             { error ->
+                Toast.makeText(requireContext(), "City not found",Toast.LENGTH_SHORT).show()
                 Log.d("MyLog", "Error: $error")
             }
         )
