@@ -8,7 +8,6 @@ import android.location.LocationManager
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,29 +15,28 @@ import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.ActivityCompat
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.activityViewModels
-import com.android.volley.ClientError
 import com.android.volley.Request
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.example.weatherapp.DialogManager
 import com.example.weatherapp.MainViewModel
-import com.example.weatherapp.R
 import com.example.weatherapp.adpters.VpAdapter
 import com.example.weatherapp.adpters.WeatherModel
 import com.example.weatherapp.databinding.FragmentMainBinding
 import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.google.android.gms.tasks.CancellationToken
 import com.google.android.gms.tasks.CancellationTokenSource
-import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import com.squareup.picasso.Picasso
 import org.json.JSONObject
-import kotlin.math.max
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 class MainFragment : Fragment() {
@@ -46,6 +44,8 @@ class MainFragment : Fragment() {
     private lateinit var binding: FragmentMainBinding
     private lateinit var pLauncher: ActivityResultLauncher<String>
     private lateinit var fLocationClient: FusedLocationProviderClient
+    private val coroutineScope = CoroutineScope(Dispatchers.Main)
+
     private val model: MainViewModel by activityViewModels()
 
     private val fragmentList = listOf(
@@ -104,8 +104,8 @@ class MainFragment : Fragment() {
             tabLayout.selectTab(tabLayout.getTabAt(0))
         }
 
-        tbSearch.setOnClickListener{
-            DialogManager.searchByNameDialog(requireContext(), object : DialogManager.Listener{
+        tbSearch.setOnClickListener {
+            DialogManager.searchByNameDialog(requireContext(), object : DialogManager.Listener {
                 override fun onClickSettings(name: String?) {
                     name?.let { it1 -> requestWeatherData(it1) }
                 }
@@ -117,7 +117,7 @@ class MainFragment : Fragment() {
         if (isLocationEnabled()) {
             getLocation()
         } else {
-            DialogManager.locationSettingsDialog(requireContext(), object: DialogManager.Listener{
+            DialogManager.locationSettingsDialog(requireContext(), object : DialogManager.Listener {
                 override fun onClickSettings(name: String?) {
                     startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
                 }
@@ -152,26 +152,35 @@ class MainFragment : Fragment() {
     }
 
     private fun requestWeatherData(city: String) {
-        val url = "http://api.weatherapi.com/v1/forecast.json?" +
-                "key=$API_KEY&" +
-                "q=$city&" +
-                "days=3&" +
-                "aqi=no&alerts=no"
+        binding.progressBar2.isVisible = true
+        val weatherJob = coroutineScope.launch {
+            val url = "http://api.weatherapi.com/v1/forecast.json?" +
+                    "key=$API_KEY&" +
+                    "q=$city&" +
+                    "days=3&" +
+                    "aqi=no&alerts=no"
+            //http://api.weatherapi.com/v1/forecast.json?key=fd062bc3c64d4011a43104139230301&q=Moscow&days=3&aqi=no&alerts=no
 
-        val queue = Volley.newRequestQueue(context)
-        val request = StringRequest(
-            Request.Method.GET,
-            url,
-            { result ->
-                parseWeatherData(result)
-            },
-            { error ->
-                Toast.makeText(requireContext(), "City not found",Toast.LENGTH_SHORT).show()
-                Log.d("MyLog", "Error: $error")
-            }
-        )
-        queue.add(request)
+            val queue = Volley.newRequestQueue(context)
+            val request = StringRequest(
+                Request.Method.GET,
+                url,
+                { result ->
+                    parseWeatherData(result)
+                },
+                { error ->
+                    Toast.makeText(requireContext(), "City not found", Toast.LENGTH_SHORT).show()
+                    Log.d("MyLog", "Error: $error")
+                }
+            )
+            queue.add(request)
+        }
+        weatherJob.invokeOnCompletion {
+            binding.progressBar2.isVisible = false
+        }
+
     }
+
 
     private fun updateCurrentCard() = with(binding) {
         model.liveDataCurrent.observe(viewLifecycleOwner) {
@@ -235,9 +244,10 @@ class MainFragment : Fragment() {
         )
     }
 
+
     companion object {
 
-        private const val API_KEY = "cfb99916f27a4070a0154533222010"
+        private const val API_KEY = "fd062bc3c64d4011a43104139230301"
 
         @JvmStatic
         fun newInstance() = MainFragment().apply {
